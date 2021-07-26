@@ -1,0 +1,2 @@
+defmodule ScrollHat do
+end
