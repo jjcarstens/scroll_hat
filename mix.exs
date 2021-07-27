@@ -21,6 +21,9 @@ defmodule ScrollHat.MixProject do
   end
 
   defp deps do
-    []
+    [
+      {:circuits_i2c, "~> 0.3.9"},
+      {:circuits_gpio, "~> 0.4.8"}
+    ]
   end
 end
