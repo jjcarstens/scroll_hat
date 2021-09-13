@@ -45,18 +45,27 @@ defmodule ScrollHat.Display do
   @impl GenServer
   def init(opts) do
     bus = opts[:bus] || "i2c-1"
+    state = %{bus: bus, canvas: nil, i2c: nil, timer: nil, step_time: 500, frame: 0}
+    {:ok, state, {:continue, :init}}
+  end
 
-    with {:ok, i2c} <- I2C.open(bus),
-         # picture mode
-         :ok <- Driver.set_mode(i2c, 0),
-         # clear all LED's
-         :ok <- Driver.set_frame(i2c, 0, [<<0>>, @all_off]),
-         # set first display frame to be 0
-         :ok <- Driver.display_frame(i2c, 0),
-         # Set driver to normal operation mode
-         :ok <- Driver.shutdown_control(i2c, 1) do
-      {:ok, %{canvas: nil, i2c: i2c, timer: nil, step_time: 500, frame: 0}}
-    end
+  @impl GenServer
+  def handle_continue(:init, state) do
+    {:ok, i2c} = I2C.open(state.bus)
+
+    # picture mode
+    :ok = Driver.set_mode(i2c, 0)
+
+    # clear all LED's
+    :ok = Driver.set_frame(i2c, 0, [<<0>>, @all_off])
+
+    # set first display frame to be 0
+    :ok = Driver.display_frame(i2c, 0)
+
+    # Set driver to normal operation mode
+    :ok = Driver.shutdown_control(i2c, 1)
+
+    {:noreply, %{state | i2c: i2c}}
   end
 
   @impl GenServer
