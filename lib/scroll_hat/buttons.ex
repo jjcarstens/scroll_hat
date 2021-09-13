@@ -17,35 +17,40 @@ defmodule ScrollHat.Buttons do
   @pin_x 16
   @pin_y 24
 
+  @spec start_link(keyword) :: GenServer.on_start()
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts, name: opts[:name] || __MODULE__)
   end
 
   @impl GenServer
   def init(opts) do
-    with {:ok, a} <- GPIO.open(@pin_a, :input),
-         {:ok, b} <- GPIO.open(@pin_b, :input),
-         {:ok, x} <- GPIO.open(@pin_x, :input),
-         {:ok, y} <- GPIO.open(@pin_y, :input),
-         :ok <- GPIO.set_interrupts(a, :both),
-         :ok <- GPIO.set_interrupts(b, :both),
-         :ok <- GPIO.set_interrupts(x, :both),
-         :ok <- GPIO.set_interrupts(y, :both) do
-      state = %{
-        @pin_a => {:a, a},
-        @pin_b => {:b, b},
-        @pin_x => {:x, x},
-        @pin_y => {:y, y},
-        handler: opts[:handler]
-      }
+    {:ok, %{mapping: %{}, handler: opts[:handler]}, {:continue, :init}}
+  end
 
-      {:ok, state}
-    end
+  @impl GenServer
+  def handle_continue(:init, state) do
+    {:ok, a} = GPIO.open(@pin_a, :input)
+    {:ok, b} = GPIO.open(@pin_b, :input)
+    {:ok, x} = GPIO.open(@pin_x, :input)
+    {:ok, y} = GPIO.open(@pin_y, :input)
+    :ok = GPIO.set_interrupts(a, :both)
+    :ok = GPIO.set_interrupts(b, :both)
+    :ok = GPIO.set_interrupts(x, :both)
+    :ok = GPIO.set_interrupts(y, :both)
+
+    mapping = %{
+      @pin_a => {:a, a},
+      @pin_b => {:b, b},
+      @pin_x => {:x, x},
+      @pin_y => {:y, y}
+    }
+
+    {:noreply, %{state | mapping: mapping}}
   end
 
   @impl GenServer
   def handle_info({:circuits_gpio, pin, timestamp, value}, state) do
-    {btn, _ref} = state[pin]
+    {btn, _ref} = state.mapping[pin]
     val = if value == 0, do: :pressed, else: :released
 
     if state.handler do
