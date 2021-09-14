@@ -2,7 +2,7 @@ defmodule ScrollHat.Buttons do
   @moduledoc """
   Buttons interface for Scroll HAT Mini
 
-  Pass a `:handler` option to receive the button events
+  Pass a `:handler` option as a pid or {m, f, a} to receive the button events
   """
   use GenServer
 
@@ -10,7 +10,16 @@ defmodule ScrollHat.Buttons do
 
   require Logger
 
-  @type event :: {:scroll_hat, :a | :b | :x | :y, :pressed | :released, non_neg_integer()}
+  defmodule Event do
+    defstruct [:action, :name, :value, :timestamp]
+
+    @type t :: %Event{
+            action: :pressed | :released,
+            name: :a | :b | :x | :y,
+            value: 1 | 0,
+            timestamp: non_neg_integer()
+          }
+  end
 
   @pin_a 5
   @pin_b 6
@@ -51,14 +60,22 @@ defmodule ScrollHat.Buttons do
   @impl GenServer
   def handle_info({:circuits_gpio, pin, timestamp, value}, state) do
     {btn, _ref} = state.mapping[pin]
-    val = if value == 0, do: :pressed, else: :released
+    action = if value == 0, do: :pressed, else: :released
 
-    if state.handler do
-      send(state.handler, {:scroll_hat, btn, val, timestamp})
-    else
-      Logger.info("[ScrollHat] button #{btn} #{val}")
-    end
+    event = %Event{action: action, name: btn, value: value, timestamp: timestamp}
+
+    _ = send_event(state.handler, event)
 
     {:noreply, state}
+  end
+
+  defp send_event(handler, event) when is_pid(handler), do: send(handler, event)
+
+  defp send_event({m, f, a}, event) when is_atom(m) and is_atom(f) and is_list(a) do
+    apply(m, f, [event | a])
+  end
+
+  defp send_event(_, event) do
+    Logger.info("[ScrollHat] unhandled button event - #{inspect(event)}")
   end
 end
