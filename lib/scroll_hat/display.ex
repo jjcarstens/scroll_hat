@@ -1,4 +1,9 @@
 defmodule ScrollHat.Display do
+  @moduledoc File.read!("README.md")
+             |> String.split(~r/<!-- DISPLAYDOC !-->/)
+             |> Enum.drop(1)
+             |> Enum.join("\n")
+
   use GenServer
 
   @type canvas :: [[non_neg_integer()], ...]
