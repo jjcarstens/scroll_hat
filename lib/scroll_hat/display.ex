@@ -15,6 +15,16 @@ defmodule ScrollHat.Display do
   @all_off :binary.copy(<<0>>, 18)
   @empty_buff for _ <- 1..144, do: 0
 
+  @doc """
+  Start the GenServer to manage the Scroll HAT's display
+
+  This is a singleton GenServer.
+
+  Options:
+
+  * `:bus` - the I2C bus going to the Scroll HAT (defaults to `"i2c-1"`)
+  """
+  @spec start_link(keyword()) :: GenServer.on_start()
   def start_link(opts \\ []) do
     GenServer.start_link(__MODULE__, opts, name: __MODULE__)
   end
