@@ -57,6 +57,14 @@ defmodule ScrollHat.Display do
     GenServer.call(__MODULE__, {:marquee, canvas, step_time, frame})
   end
 
+  @doc """
+  Set the brightness for all active LEDs for the current canvas
+  """
+  @spec set_brightness(0..255, frame()) :: IS31FL3731.result()
+  def set_brightness(val, frame \\ 0) do
+    GenServer.call(__MODULE__, {:set_brightness, val, frame})
+  end
+
   @impl GenServer
   def init(opts) do
     bus = opts[:bus] || "i2c-1"
@@ -91,7 +99,7 @@ defmodule ScrollHat.Display do
 
   def handle_call({:draw, canvas, frame}, _from, state) do
     if state.timer, do: Process.cancel_timer(state.timer)
-    {:reply, do_draw(state.i2c, canvas, frame), state}
+    {:reply, do_draw(state.i2c, canvas, frame), %{state | canvas: canvas}}
   end
 
   def handle_call({:marquee, canvas, step_time, frame}, _from, state) do
@@ -101,6 +109,15 @@ defmodule ScrollHat.Display do
     state = %{state | timer: t, canvas: canvas, step_time: step_time, frame: frame}
 
     {:reply, do_draw(state.i2c, canvas, frame), state}
+  end
+
+  def handle_call({:set_brightness, val, frame}, _from, state) do
+    # Just set all the values to the new brightness
+    # If the canvas had varying brightness of LEDS, this will reset those
+    # to all be the same. Maybe in the future we support some sort of ratio
+    # of brightness control?
+    new = for row <- state.canvas || [], do: Enum.map(row, &if(&1 > 0, do: val, else: 0))
+    {:reply, do_draw(state.i2c, new, frame), %{state | canvas: new}}
   end
 
   @impl GenServer
