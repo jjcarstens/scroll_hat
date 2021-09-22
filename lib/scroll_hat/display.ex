@@ -10,7 +10,7 @@ defmodule ScrollHat.Display do
   @type frame :: 0..7
 
   alias Circuits.I2C
-  alias IS31FL3731, as: Driver
+  alias ScrollHat.IS31FL3731, as: Driver
 
   @all_off :binary.copy(<<0>>, 18)
   @empty_buff for _ <- 1..144, do: 0
