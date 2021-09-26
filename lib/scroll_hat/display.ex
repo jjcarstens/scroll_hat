@@ -7,12 +7,12 @@ defmodule ScrollHat.Display do
   use GenServer
 
   @type canvas :: [[non_neg_integer()], ...]
-  @type frame :: 0..7
 
   alias Circuits.I2C
   alias ScrollHat.IS31FL3731, as: Driver
 
   @all_off :binary.copy(<<0>>, 18)
+  @default_frame 0
   @empty_buff for _ <- 1..144, do: 0
 
   @doc """
@@ -30,12 +30,12 @@ defmodule ScrollHat.Display do
   end
 
   @doc """
-  Clear the specified frame of the display
+  Clear the  display
 
-  This sets all LED's of that frame to the off state.
+  This sets all LED's to the off state.
   """
-  @spec clear(frame()) :: IS31FL3731.result()
-  def clear(frame \\ 0), do: GenServer.call(__MODULE__, {:clear, frame})
+  @spec clear() :: IS31FL3731.result()
+  def clear(), do: GenServer.call(__MODULE__, :clear)
 
   @doc """
   Draw a canvas matrix on the display
@@ -44,31 +44,31 @@ defmodule ScrollHat.Display do
   an integer between 0-255. The value represents the brightness of the
   LED at that location and any value > 0 signifies that the LED is on.
   """
-  @spec draw(canvas(), frame()) :: IS31FL3731.result()
-  def draw(canvas, frame \\ 0), do: GenServer.call(__MODULE__, {:draw, canvas, frame})
+  @spec draw(canvas()) :: IS31FL3731.result()
+  def draw(canvas), do: GenServer.call(__MODULE__, {:draw, canvas})
 
   @doc """
   Draw a canvas and then scroll it to the left
 
   `step_time` is the number of milliseconds to wait between each step
   """
-  @spec marquee(canvas(), non_neg_integer(), frame()) :: IS31FL3731.result()
-  def marquee(canvas, step_time, frame \\ 0) do
-    GenServer.call(__MODULE__, {:marquee, canvas, step_time, frame})
+  @spec marquee(canvas(), non_neg_integer()) :: IS31FL3731.result()
+  def marquee(canvas, step_time) do
+    GenServer.call(__MODULE__, {:marquee, canvas, step_time})
   end
 
   @doc """
   Set the brightness for all active LEDs for the current canvas
   """
-  @spec set_brightness(0..255, frame()) :: IS31FL3731.result()
-  def set_brightness(val, frame \\ 0) do
-    GenServer.call(__MODULE__, {:set_brightness, val, frame})
+  @spec set_brightness(0..255) :: IS31FL3731.result()
+  def set_brightness(val) do
+    GenServer.call(__MODULE__, {:set_brightness, val})
   end
 
   @impl GenServer
   def init(opts) do
     bus = opts[:bus] || "i2c-1"
-    state = %{bus: bus, canvas: nil, i2c: nil, timer: nil, step_time: 500, frame: 0}
+    state = %{bus: bus, canvas: nil, i2c: nil, timer: nil, step_time: 500}
     {:ok, state, {:continue, :init}}
   end
 
@@ -80,10 +80,10 @@ defmodule ScrollHat.Display do
     :ok = Driver.set_mode(i2c, 0)
 
     # clear all LED's
-    :ok = Driver.set_frame(i2c, 0, [<<0>>, @all_off])
+    :ok = Driver.set_frame(i2c, @default_frame, [<<0>>, @all_off])
 
     # set first display frame to be 0
-    :ok = Driver.display_frame(i2c, 0)
+    :ok = Driver.display_frame(i2c, @default_frame)
 
     # Set driver to normal operation mode
     :ok = Driver.shutdown_control(i2c, 1)
@@ -92,52 +92,52 @@ defmodule ScrollHat.Display do
   end
 
   @impl GenServer
-  def handle_call({:clear, frame}, _from, state) do
+  def handle_call(:clear, _from, state) do
     if state.timer, do: Process.cancel_timer(state.timer)
-    {:reply, Driver.set_frame(state.i2c, frame, @all_off), state}
+    {:reply, Driver.set_frame(state.i2c, @default_frame, @all_off), state}
   end
 
-  def handle_call({:draw, canvas, frame}, _from, state) do
+  def handle_call({:draw, canvas}, _from, state) do
     if state.timer, do: Process.cancel_timer(state.timer)
-    {:reply, do_draw(state.i2c, canvas, frame), %{state | canvas: canvas}}
+    {:reply, do_draw(state.i2c, canvas), %{state | canvas: canvas}}
   end
 
-  def handle_call({:marquee, canvas, step_time, frame}, _from, state) do
+  def handle_call({:marquee, canvas, step_time}, _from, state) do
     if state.timer, do: Process.cancel_timer(state.timer)
     t = Process.send_after(self(), :shift, step_time)
 
-    state = %{state | timer: t, canvas: canvas, step_time: step_time, frame: frame}
+    state = %{state | timer: t, canvas: canvas, step_time: step_time}
 
-    {:reply, do_draw(state.i2c, canvas, frame), state}
+    {:reply, do_draw(state.i2c, canvas), state}
   end
 
-  def handle_call({:set_brightness, val, frame}, _from, state) do
+  def handle_call({:set_brightness, val}, _from, state) do
     # Just set all the values to the new brightness
     # If the canvas had varying brightness of LEDS, this will reset those
-    # to all be the same. Maybe in the future we support some sort of ratio
+    # to all be the same. Maybe in the future we support some sorratio
     # of brightness control?
     new = for row <- state.canvas || [], do: Enum.map(row, &if(&1 > 0, do: val, else: 0))
-    {:reply, do_draw(state.i2c, new, frame), %{state | canvas: new}}
+    {:reply, do_draw(state.i2c, new), %{state | canvas: new}}
   end
 
   @impl GenServer
   def handle_info(:shift, state) do
     shifted = for [f | row] <- state.canvas, do: List.insert_at(row, -1, f)
-    do_draw(state.i2c, shifted, state.frame)
+    do_draw(state.i2c, shifted)
     t = Process.send_after(self(), :shift, state.step_time)
 
     {:noreply, %{state | canvas: shifted, timer: t}}
   end
 
-  defp do_draw(i2c, canvas, frame) do
+  defp do_draw(i2c, canvas) do
     {bright_buff, led_buff} = create_buffers(canvas)
 
     # Set brightness (PWM)
-    :ok = Driver.set_frame(i2c, frame, [<<0x24>>, bright_buff])
+    :ok = Driver.set_frame(i2c, @default_frame, [<<0x24>>, bright_buff])
 
     # Turn LED's on/off based on bit buffer
     bin = for b <- led_buff, into: <<>>, do: <<b::1>>
-    Driver.set_frame(i2c, frame, <<0>> <> bin)
+    Driver.set_frame(i2c, @default_frame, <<0>> <> bin)
   end
 
   defp create_buffers(canvas) do
