@@ -21,17 +21,12 @@ your supervision tree:
 {:ok, _pid} = ScrollHat.Display.start_link()
 ```
 
-The `draw/2` and `marquee/3` accept a 2D 7x17 canvas matrix where each value
+The `draw/1` and `marquee/2` accept a 2D 7x17 canvas matrix where each value
 represents the LED at that location starting from top-left. Values
 must be a positive integer, 0-255, where `0` disables the LED and any value
 greater than 0 sets the brightness to that level.
 
-The `frame` argument is the frame (0-7) to write for the LED driver. The default
-is the first frame `0`. However, this rarely needs to be used as it is mainly
-intended as a memory store on the LED driver chip and is mainly provided for
-convenience. The state of the display is instead kept in `ScrollHat.Display`
-
-When using `marquee/3`, a canvas larger than 7x17 can be supplied in which
+When using `marquee/2`, a canvas larger than 7x17 can be supplied in which
 the display will attempt to scroll through, left -> right, moving one LED
 column at a time.
 
