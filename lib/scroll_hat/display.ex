@@ -65,10 +65,25 @@ defmodule ScrollHat.Display do
     GenServer.call(__MODULE__, {:set_brightness, val})
   end
 
+  def set_font(font) do
+    GenServer.call(__MODULE__, {:set_font, font})
+  end
+
   @impl GenServer
   def init(opts) do
     bus = opts[:bus] || "i2c-1"
-    state = %{bus: bus, canvas: nil, i2c: nil, timer: nil, step_time: 500}
+
+    state = %{
+      bus: bus,
+      canvas: nil,
+      i2c: nil,
+      timer: nil,
+      step_time: 500,
+      font: ScrollHat.Font.Unicode,
+      text: "",
+      brightness: 100
+    }
+
     {:ok, state, {:continue, :init}}
   end
 
@@ -117,7 +132,17 @@ defmodule ScrollHat.Display do
     # to all be the same. Maybe in the future we support some sorratio
     # of brightness control?
     new = for row <- state.canvas || [], do: Enum.map(row, &if(&1 > 0, do: val, else: 0))
-    {:reply, do_draw(state.i2c, new), %{state | canvas: new}}
+    {:reply, do_draw(state.i2c, new), %{state | canvas: new, brightness: val}}
+  end
+
+  def handle_call({:set_font, font}, _from, state) do
+    state = %{
+      state
+      | font: font,
+        canvas: ScrollHat.Font.text_to_canvas(state.text, state.font, state.brightness)
+    }
+
+    {:reply, do_draw(state.i2c, state.canvas), state}
   end
 
   @impl GenServer
