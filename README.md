@@ -21,21 +21,17 @@ your supervision tree:
 {:ok, _pid} = ScrollHat.Display.start_link()
 ```
 
-The `draw/1` and `marquee/2` accept a 2D 7x17 canvas matrix where each value
-represents the LED at that location starting from top-left. Values
-must be a positive integer, 0-255, where `0` disables the LED and any value
+The `draw/1` and `marquee/2` accept a string of text or 2D 7x17 canvas matrix
+where each value represents the LED at that location starting from top-left.
+Values must be a positive integer, 0-255, where `0` disables the LED and any value
 greater than 0 sets the brightness to that level.
 
 When using `marquee/2`, a canvas larger than 7x17 can be supplied in which
 the display will attempt to scroll through, left -> right, moving one LED
 column at a time.
 
-A `ScrollHat.Font` has been provided as a convenience to transform text into
-a canvas for display:
-
-```elixir
-canvas = ScrollHat.Font.graph("howdy")
-ScrollHat.Display.draw(canvas)
-```
+Use `set_font/1` to change the font of the display to one of the supporting
+fonts. **Note**: _Fonts are still in development and may not support every
+character which might fail trying to convert a text to a canvas_
 
 <!-- DISPLAYDOC !-->
