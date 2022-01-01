@@ -1,5 +1,15 @@
 # Changelog
 
+## [[0.2.1] - 2022-01-01](https://github.com/jjcarstens/scroll_hat/releases/tag/v0.2.1)
+
+### Added
+
+* Livebook content for sampling the library
+
+### Fixes
+
+* Allow circuits_* 1.0.0 to be used
+
 ## [[0.2.0] - 2021-10-05](https://github.com/jjcarstens/scroll_hat/releases/tag/v0.2.0)
 
 ### Added
