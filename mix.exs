@@ -1,7 +1,7 @@
 defmodule ScrollHat.MixProject do
   use Mix.Project
 
-  @version "0.2.1"
+  @version "0.2.2"
   @app :scroll_hat
   @source_url "https://github.com/jjcarstens/scroll_hat"
 

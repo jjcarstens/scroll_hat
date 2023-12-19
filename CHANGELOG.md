@@ -1,5 +1,11 @@
 # Changelog
 
+## [[0.2.2] - 2023-12-19](https://github.com/jjcarstens/scroll_hat/releases/tag/v0.2.2)
+
+### Fixes
+
+* Allow circuits_* 2.0.0 to be used
+
 ## [[0.2.1] - 2022-01-01](https://github.com/jjcarstens/scroll_hat/releases/tag/v0.2.1)
 
 ### Added
