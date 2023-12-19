@@ -32,8 +32,8 @@ defmodule ScrollHat.MixProject do
 
   defp deps do
     [
-      {:circuits_i2c, "~> 1.0 or ~> 0.3.9"},
-      {:circuits_gpio, "~> 1.0 or ~> 0.4.8"},
+      {:circuits_i2c, "~> 2.0 or ~> 1.0 or ~> 0.3.9"},
+      {:circuits_gpio, "~> 2.0 or ~> 1.0 or ~> 0.4.8"},
 
       # Dev dependencies
       {:dialyxir, "~> 1.1.0", only: :dev, runtime: false},
