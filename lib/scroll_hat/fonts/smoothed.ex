@@ -1527,7 +1527,7 @@ defmodule ScrollHat.Font.Smoothed do
     [
       [0x0, 0x0, 0x0, 0x0, 0x0],
       [0x19, 0x6A, 0x19, 0x0, 0x0],
-      'j3j3j',
+      ~c"j3j3j",
       [0x0, 0x0, 0x19, 0x6A, 0x19],
       [0x0, 0x0, 0x0, 0x0, 0x0],
       [0x0, 0x0, 0x0, 0x0, 0x0],
@@ -2582,11 +2582,11 @@ defmodule ScrollHat.Font.Smoothed do
   def char_matrix(0xD6, _b) do
     [
       [0x1A, 0x22, 0x22, 0x22, 0x1A],
-      '"***"',
-      '")**"',
-      '"***"',
-      '"***"',
-      '"***"',
+      ~c'"***"',
+      ~c'")**"',
+      ~c'"***"',
+      ~c'"***"',
+      ~c'"***"',
       [0x1A, 0x22, 0x22, 0x22, 0x1B]
     ]
   end
@@ -2904,7 +2904,7 @@ defmodule ScrollHat.Font.Smoothed do
   end
 
   def char_matrix(0xF1, _b) do
-    ['j3j3j', '3jNj3', 'jNjNj', '3jNj3', 'jNjNj', '3jNj3', 'j3j3j']
+    [~c"j3j3j", ~c"3jNj3", ~c"jNjNj", ~c"3jNj3", ~c"jNjNj", ~c"3jNj3", ~c"j3j3j"]
   end
 
   def char_matrix(0xF2, _b) do
