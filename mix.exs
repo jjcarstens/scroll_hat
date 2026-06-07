@@ -15,12 +15,7 @@ defmodule ScrollHat.MixProject do
       description: "Implementation for Pimoroni Scroll Hat boards and IS31FL3731 LED driver",
       dialyzer: dialyzer(),
       docs: docs(),
-      package: package(),
-      preferred_cli_env: %{
-        docs: :docs,
-        "hex.build": :docs,
-        "hex.publish": :docs
-      }
+      package: package()
     ]
   end
 
@@ -30,13 +25,17 @@ defmodule ScrollHat.MixProject do
     ]
   end
 
+  def cli do
+    [preferred_envs: %{docs: :docs, "hex.build": :docs, "hex.publish": :docs}]
+  end
+
   defp deps do
     [
       {:circuits_i2c, "~> 2.0 or ~> 1.0 or ~> 0.3.9"},
       {:circuits_gpio, "~> 2.0 or ~> 1.0 or ~> 0.4.8"},
 
       # Dev dependencies
-      {:dialyxir, "~> 1.1.0", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4", only: :dev, runtime: false},
       {:ex_doc, "~> 0.22", only: :docs, runtime: false}
     ]
   end
@@ -53,7 +52,7 @@ defmodule ScrollHat.MixProject do
 
   defp dialyzer() do
     [
-      flags: [:race_conditions, :unmatched_returns, :error_handling, :underspecs]
+      flags: [:unmatched_returns, :error_handling, :underspecs]
     ]
   end
 
