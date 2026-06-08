@@ -1,5 +1,9 @@
 # Changelog
 
+## [[0.2.3] - 2026-06-08](https://github.com/jjcarstens/scroll_hat/releases/tag/v0.2.3)
+
+Updates dependencies and Mix settings to support Elixir 1.19+
+
 ## [[0.2.2] - 2023-12-19](https://github.com/jjcarstens/scroll_hat/releases/tag/v0.2.2)
 
 ### Fixes
